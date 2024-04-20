@@ -1,0 +1,4 @@
+obj/Debug/net6.0/Protos/Client-serviceGrpc.cs \
+obj/Debug/net6.0/Protos/ClientService.cs: /Users/adev/.nuget/packages/grpc.tools/2.49.1/build/native/include/google/protobuf/wrappers.proto\
+ /Users/adev/.nuget/packages/grpc.tools/2.49.1/build/native/include/google/protobuf/timestamp.proto\
+ Protos/client-service.proto

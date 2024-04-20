@@ -1,0 +1,27 @@
+#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+WORKDIR /src
+COPY ["TestsService.API/TestsService.API.csproj", "TestsService.API/"]
+COPY ["TestsService.AppCore/TestsService.AppCore.csproj", "TestsService.AppCore/"]
+COPY ["TestsService.Domain/TestsService.Domain.csproj", "TestsService.Domain/"]
+COPY ["TestsService.External/TestsService.External.csproj", "TestsService.External/"]
+COPY ["TestsService.Infrastructure/TestsService.Infrastructure.csproj", "TestsService.Infrastructure/"]
+RUN dotnet restore "TestsService.API/TestsService.API.csproj"
+COPY . .
+WORKDIR "/src/TestsService.API"
+RUN dotnet build "TestsService.API.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "TestsService.API.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+COPY TestsService.API/Resources /app/Resources
+ENTRYPOINT ["dotnet", "TestsService.API.dll","--environment=Staging"]
