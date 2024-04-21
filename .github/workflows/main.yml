@@ -33,11 +33,6 @@ jobs:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Deploy to Amazon Linux Server
       run: |
-        # Stop existing application
-        ssh -T ec2-user@${{ secrets.SERVER_IP }} "pkill -f 'dotnet.*API.dll'"
-    
-        # Sync new application files
-        rsync -avz --exclude '.git*' --delete ./ ec2-user@${{ secrets.SERVER_IP }}:/home/ec2-user/projects/test/API/bin/Release/net6.0/publish/
-    
-        # Start the updated application
-        ssh -T ec2-user@${{ secrets.SERVER_IP }} "cd /home/ec2-user/projects/test/API/bin/Release/net6.0/publish/ && nohup dotnet API.dll &"
+        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.SERVER_IP }} "pkill -f 'dotnet.*API.dll'"
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude '.git*' --delete ./ ec2-user@${{ secrets.SERVER_IP }}:/home/ec2-user/projects/test/API/bin/Release/net6.0/publish/
+        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.SERVER_IP }} "cd /home/ec2-user/projects/test/API/bin/Release/net6.0/publish/ && nohup dotnet API.dll &"
