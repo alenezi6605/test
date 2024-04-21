@@ -24,23 +24,20 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Specify which runner to use for the deployment job
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-  
-      - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-  
-      - name: Deploy to Amazon Linux Server
-        run: |
-          rsync -avz --exclude '.git*' --delete ./ ec2-user@${{ secrets.SERVER_IP }}:/home/ec2-user/projects/test/
-          ssh -T ec2-user@${{ secrets.SERVER_IP }} << EOF
-            set -e
-            cd /home/ec2-user/projects/test/
-            dotnet restore
-            dotnet build
-            sudo systemctl restart your-service
-          EOF
+    - uses: actions/checkout@v2
+    - name: Setup SSH Agent
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Deploy to Amazon Linux Server
+      run: |
+        # Stop existing application
+        ssh -T ec2-user@${{ secrets.SERVER_IP }} "pkill -f 'dotnet.*API.dll'"
+    
+        # Sync new application files
+        rsync -avz --exclude '.git*' --delete ./ ec2-user@${{ secrets.SERVER_IP }}:/home/ec2-user/projects/test/API/bin/Release/net6.0/publish/
+    
+        # Start the updated application
+        ssh -T ec2-user@${{ secrets.SERVER_IP }} "cd /home/ec2-user/projects/test/API/bin/Release/net6.0/publish/ && nohup dotnet API.dll &"
