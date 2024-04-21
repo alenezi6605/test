@@ -23,3 +23,20 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+
+  deploy:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+  
+        - name: Set up SSH key
+          uses: webfactory/ssh-agent@v0.5.3
+          with:
+            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+  
+        - name: Deploy to Amazon Linux Server
+          run: |
+            rsync -avz --exclude '.git*' --delete ./ ec2-user@${{ secrets.SERVER_IP }}:/home/ec2-user/projects/test/
+            ssh ec2-user@${{ secrets.SERVER_IP }} "cd /path/to/deployment && dotnet restore && dotnet build && sudo systemctl restart your-service"
