@@ -33,5 +33,5 @@ jobs:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Deploy to Amazon Linux Server
       run: |
-        rsync -avz --exclude '.git*' --delete ./ ec2-user@${{ secrets.SERVER_IP }}:/home/ec2-user/projects/test/API/bin/Release/net6.0/publish/
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude '.git*' --delete ./ ec2-user@${{ secrets.SERVER_IP }}:/home/ec2-user/projects/test/API/bin/Release/net6.0/publish/
         ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.SERVER_IP }} "sudo systemctl restart test.service"
